@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Search from "./componets/Search";
 import MovieCard from "./componets/MovieCard";
 import Spinner from "./componets/Spinner";
+import { useDebounce } from "react-use";
+
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -19,11 +21,23 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+ 
+  
+  useDebounce(
+    () => {
+      setSearchQuery(searchTerm);
+    },250,
+    [searchTerm]
+  );
 
   const fetchMovies = async (query) => {
     try {
       setLoading(true);
-      const url = `${API_URL}/movie/popular?language=en-US&page=1`;
+      const url = query
+        ? `${API_URL}/search/movie?query=${encodeURIComponent(query)}`
+        : `${API_URL}/movie/popular?language=en-US&page=1`;
+
       const response = await fetch(url, API_OPTIONS);
       if (!response.ok) {
         throw new Error("Failed to fetch movies");
@@ -37,8 +51,8 @@ const App = () => {
     }
   };
   useEffect(() => {
-    fetchMovies(searchTerm);
-  }, [searchTerm]);
+    fetchMovies(searchQuery);
+  }, [searchQuery]);
   return (
     <main className=''>
       <div className='bg-[url(/image/hero-bg.png)] w-full py-6 bg-cover bg-center flex gap-4 flex-col items-center justify-center'>
